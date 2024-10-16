@@ -201,9 +201,9 @@ public static void escribirArchivoReferencias(int tamanioPagina, int alto, int a
                     case 1:
                         System.out.println("Ingrese el tamaño de página (en bytes): ");
                         int tamanioPagina = Integer.parseInt(br.readLine());
-                        System.out.println("Ingrese la ruta del archivo de imagen BMP: ");
+                        System.out.println("Ingrese el nombre del archivo de imagen BMP: ");
                         String archivoImagen = br.readLine();
-                        generarReferencias(tamanioPagina, archivoImagen);
+                        generarReferencias(tamanioPagina, "./archivos/" + archivoImagen);
                         break;
                     case 2:
                         ocultarMensaje();
