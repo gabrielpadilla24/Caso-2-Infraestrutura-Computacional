@@ -106,16 +106,47 @@ public static void generarReferencias(int tamanioPagina, String archivoImagen) {
     int altoImagen = imagen.getAlto();
     int totalBytesImagen = anchoImagen * altoImagen * 3;
     int longitudMensaje = imagen.leerLongitud();
-    int totalReferencias = (longitudMensaje * 17) + 16;
+    // int totalReferencias = (longitudMensaje * 17) + 16;
     int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
     int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
     int totalPaginas = numPaginasImagen + numPaginasMensaje;
 
-    generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
-    generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
+    // Nuevo
+    generarReferenciasImagen(tamanioPagina, anchoImagen, altoImagen);
+    generarReferenciasMensaje(tamanioPagina,longitudMensaje,numPaginasImagen);
+
+    //generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
+    //generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
 
     // Guardar las referencias en "referencias.txt"
-    escribirArchivoReferencias(tamanioPagina, altoImagen, anchoImagen, totalReferencias, totalPaginas);
+    escribirArchivoReferencias(tamanioPagina, altoImagen, anchoImagen, listaReferencias.size(), totalPaginas);
+}
+
+// Generar referencias para la imagen
+private static void generarReferenciasImagen(int tamanioPagina, int anchoImagen, int altoImagen) {
+    for (int i = 0; i < altoImagen; i++) {
+        for (int j = 0; j < anchoImagen; j++) {
+            for (int k = 0; k < 3; k++) {
+                int posicionByte = (i * anchoImagen + j) * 3 + k;
+                int desplazamiento = posicionByte % tamanioPagina;
+                int paginaVirtual = posicionByte / tamanioPagina;
+                String canalColor = (k == 0) ? "R" : (k == 1) ? "G" : "B";
+
+                // Agregar referencia de lectura (R)
+                listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, i, j, canalColor));
+            }
+        }
+    }
+}
+
+// Generar referencias para el mensaje
+private static void generarReferenciasMensaje(int tamanioPagina, int longitudMensaje, int numPaginasImagen) {
+    for (int i = 0; i < longitudMensaje; i++) {
+        int paginaVirtualMensaje = numPaginasImagen + (i / tamanioPagina);
+        int desplazamientoMensaje = i % tamanioPagina;
+
+        listaReferencias.add(new RecursoMemoria(paginaVirtualMensaje, desplazamientoMensaje));
+    }
 }
 
 private static void generarReferenciasLongitudMensaje(int tamanioPagina, int anchoImagen) {
@@ -181,6 +212,13 @@ public static void escribirArchivoReferencias(int tamanioPagina, int alto, int a
     }
 }
 
+public static void calcularDatos(int numMarcosPagina, String archivoReferencias) {
+    System.out.println("Calculando datos...");
+    System.out.println("Número de marcos de página: " + numMarcosPagina);
+    System.out.println("Archivo de referencias: " + archivoReferencias);
+}
+
+
     // Método principal del simulador
     public static void main(String[] args) {
         try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
@@ -192,7 +230,8 @@ public static void escribirArchivoReferencias(int tamanioPagina, int alto, int a
                 System.out.println("1. Generar referencias de paginación.");
                 System.out.println("2. Ocultar mensaje en imagen BMP.");
                 System.out.println("3. Extraer mensaje de imagen BMP.");
-                System.out.println("4. Salir.");
+                System.out.println("4. Calcular datos buscados.");
+                System.out.println("5. Salir.");
                 System.out.println("============================");
 
                 int opcion = Integer.parseInt(br.readLine());
@@ -212,6 +251,12 @@ public static void escribirArchivoReferencias(int tamanioPagina, int alto, int a
                         extraerMensaje();
                         break;
                     case 4:
+                        System.out.println("Ingrese el número de marcos de página:");
+                        int numMarcosPagina = Integer.parseInt(br.readLine());
+                        System.out.println("Ingrese el nombre del archivo de referencias: ");
+                        String archivoReferencias = br.readLine();
+                        calcularDatos (numMarcosPagina, archivoReferencias);
+                    case 5:
                         continuar = false;
                         break;
                     default:
