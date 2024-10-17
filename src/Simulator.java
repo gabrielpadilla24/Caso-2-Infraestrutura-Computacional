@@ -106,48 +106,18 @@ public static void generarReferencias(int tamanioPagina, String archivoImagen) {
     int altoImagen = imagen.getAlto();
     int totalBytesImagen = anchoImagen * altoImagen * 3;
     int longitudMensaje = imagen.leerLongitud();
-    // int totalReferencias = (longitudMensaje * 17) + 16;
+    int totalReferencias = (longitudMensaje * 17) + 16;
     int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
     int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
     int totalPaginas = numPaginasImagen + numPaginasMensaje;
 
-    // Nuevo
-    generarReferenciasImagen(tamanioPagina, anchoImagen, altoImagen);
-    generarReferenciasMensaje(tamanioPagina,longitudMensaje,numPaginasImagen);
-
-    //generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
-    //generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
+    generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
+    generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
 
     // Guardar las referencias en "referencias.txt"
     escribirArchivoReferencias(tamanioPagina, altoImagen, anchoImagen, listaReferencias.size(), totalPaginas);
 }
 
-// Generar referencias para la imagen
-private static void generarReferenciasImagen(int tamanioPagina, int anchoImagen, int altoImagen) {
-    for (int i = 0; i < altoImagen; i++) {
-        for (int j = 0; j < anchoImagen; j++) {
-            for (int k = 0; k < 3; k++) {
-                int posicionByte = (i * anchoImagen + j) * 3 + k;
-                int desplazamiento = posicionByte % tamanioPagina;
-                int paginaVirtual = posicionByte / tamanioPagina;
-                String canalColor = (k == 0) ? "R" : (k == 1) ? "G" : "B";
-
-                // Agregar referencia de lectura (R)
-                listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, i, j, canalColor));
-            }
-        }
-    }
-}
-
-// Generar referencias para el mensaje
-private static void generarReferenciasMensaje(int tamanioPagina, int longitudMensaje, int numPaginasImagen) {
-    for (int i = 0; i < longitudMensaje; i++) {
-        int paginaVirtualMensaje = numPaginasImagen + (i / tamanioPagina);
-        int desplazamientoMensaje = i % tamanioPagina;
-
-        listaReferencias.add(new RecursoMemoria(paginaVirtualMensaje, desplazamientoMensaje));
-    }
-}
 
 private static void generarReferenciasLongitudMensaje(int tamanioPagina, int anchoImagen) {
     int desplazamiento;
@@ -216,7 +186,71 @@ public static void calcularDatos(int numMarcosPagina, String archivoReferencias)
     System.out.println("Calculando datos...");
     System.out.println("Número de marcos de página: " + numMarcosPagina);
     System.out.println("Archivo de referencias: " + archivoReferencias);
+    cargarReferencias(archivoReferencias);
 }
+
+public static void cargarReferencias(String archivoReferencias) {
+    ArrayList<Referencia> referencias = new ArrayList<>();
+
+        try (BufferedReader br = new BufferedReader(new FileReader(archivoReferencias))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                // Saltar las líneas que no contienen referencias
+                if (linea.startsWith("Imagen") || linea.startsWith("Mensaje")) {
+                    // Dividir la línea en partes usando la coma como delimitador
+                    String[] partes = linea.split(",");
+                    String nombre = partes[0];  // Matriz o vector y posicion correspondiente
+                    int pagina = Integer.parseInt(partes[1]);  // Pagina virtual correspondiente
+                    int desplazamiento = Integer.parseInt(partes[2]);  // Desplazamiento en la pagina virtual
+                    char tipo = partes[3].charAt(0);  // 'R' o 'W'
+
+                    // Crear una nueva referencia y añadirla al array
+                    Referencia ref = new Referencia(nombre, pagina, desplazamiento, tipo);
+                    referencias.add(ref);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        System.out.println("\nReferencias cargadas: " + referencias.size()+"\n");
+    }
+    
+
+    public static int[] tablaPaginas;
+
+    public static void crearTablaPaginas (String archivoReferencias){
+
+        try (BufferedReader br = new BufferedReader(new FileReader(archivoReferencias))) {
+        String linea;
+        int np = 0;  // Número de páginas virtuales
+
+        // Leer el archivo para saber cuantas paginas hay
+        while ((linea = br.readLine()) != null) {
+            // Buscar la línea que define NP
+            if (linea.startsWith("NP=")) {
+                np = Integer.parseInt(linea.split("=")[1]);  // Extraer el valor de NP
+                break;
+            }
+        }
+
+        // Definir la tabla de páginas con el tamaño NP
+        tablaPaginas = new int[np];
+
+        // Inicializar la tabla de páginas
+        for (int i = 0; i < np; i++) {
+            tablaPaginas[i] = -1;  // Las páginas no están asignadas estan marcadas con -1
+        }
+
+    } catch (IOException e) {
+        e.printStackTrace();
+    }
+
+    System.out.println("Tabla de páginas creada con tamaño: " + tablaPaginas.length);
+}
+        
+    
 
 
     // Método principal del simulador
@@ -256,11 +290,11 @@ public static void calcularDatos(int numMarcosPagina, String archivoReferencias)
                         System.out.println("Ingrese el nombre del archivo de referencias: ");
                         String archivoReferencias = br.readLine();
                         calcularDatos (numMarcosPagina, archivoReferencias);
+                        crearTablaPaginas(archivoReferencias);
+                        break;
+  
                     case 5:
                         continuar = false;
-                        break;
-                    default:
-                        System.out.println("Opción no válida.");
                         break;
                 }
             }
