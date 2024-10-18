@@ -8,219 +8,172 @@ public class Simulator {
     // Leer el contenido de un archivo de texto y devolverlo como un array de caracteres
     public static int leerArchivoTexto(String rutaArchivo, char[] contenidoMensaje) {
         int contadorCaracteres = 0;
-    
-    try {
-        // Abrimos el archivo usando un FileReader y BufferedReader
+
         try (FileReader archivo = new FileReader(rutaArchivo);
              BufferedReader buffer = new BufferedReader(archivo)) {
-        
+
             int codigoCaracter;
-        
-            // Usamos un ciclo for para procesar la lectura del archivo
-            for (codigoCaracter = buffer.read(); codigoCaracter != -1; codigoCaracter = buffer.read()) {
-                // Convertimos el código del carácter en char y lo almacenamos en el arreglo
+            while ((codigoCaracter = buffer.read()) != -1) {
                 contenidoMensaje[contadorCaracteres] = (char) codigoCaracter;
                 contadorCaracteres++;
             }
-        }
-        
-    } catch (IOException errorLectura) {
-        // Se captura cualquier excepción y se muestra el error
-        errorLectura.printStackTrace();
-    }
-    
-    // Retornamos la cantidad de caracteres leídos
-    return contadorCaracteres;
-}
-
-//YA LISTO
-// Ocultar un mensaje en una imagen BMP
-public static void ocultarMensaje() {
-    InputStreamReader isr = new InputStreamReader(System.in);
-    BufferedReader br = new BufferedReader(isr);
-    
-    try {
-        System.out.println("Nombre del archivo con la imagen a procesar: ");
-        String rutaImagen = br.readLine();
-
-        Imagen imagen = new Imagen(rutaImagen);
-
-        System.out.println("Nombre del archivo con el mensaje a esconder: ");
-        String rutaMensaje = br.readLine();
-
-        // Leer el archivo con el mensaje y convertirlo a un array de caracteres
-        int longitudMensaje = leerArchivoTexto(rutaMensaje, new char[8000]);
-        char[] mensaje = new char[longitudMensaje];
-
-        // Ocultar el mensaje en la imagen
-        imagen.esconder(mensaje, longitudMensaje);
-
-        // Guardar la imagen con el mensaje escondido
-        imagen.escribirImagen("salida_" + rutaImagen);
-
-        System.out.println("El mensaje ha sido escondido en la imagen: salida_" + rutaImagen);
-        br.close();
-    } catch (Exception e) {
-        e.printStackTrace();
-    }
-}
-
-//YA LISTO
-// Extraer un mensaje oculto en una imagen BMP
-public static void extraerMensaje() {
-    InputStreamReader isr = new InputStreamReader(System.in);
-    BufferedReader br = new BufferedReader(isr);
-    
-    try {
-        System.out.println("Nombre del archivo con el mensaje escondido: ");
-        String rutaImagen = br.readLine();
-
-        Imagen imagen = new Imagen(rutaImagen);
-        int longitudMensaje = imagen.leerLongitud(); // Obtener la longitud del mensaje escondido
-        char[] mensaje = new char[longitudMensaje]; // Crear un array de caracteres para almacenar el mensaje
-
-        // Recuperar el mensaje de la imagen
-        imagen.recuperar(mensaje, longitudMensaje);
-
-        System.out.println("Nombre del archivo para almacenar el mensaje recuperado: ");
-        String archivoSalida = br.readLine();
-
-        // Guardar el mensaje recuperado en un archivo de texto
-        try (FileWriter fw = new FileWriter(archivoSalida)) {
-            fw.write(mensaje);
+        } catch (IOException errorLectura) {
+            errorLectura.printStackTrace();
         }
 
-        System.out.println("El mensaje ha sido guardado en: " + archivoSalida);
-        br.close();
-    } catch (Exception e) {
-        e.printStackTrace();
+        return contadorCaracteres;
     }
-}
 
-// Generar referencias de paginación para la imagen y el mensaje
-public static void generarReferencias(int tamanioPagina, String archivoImagen) {
-    Imagen imagen = new Imagen(archivoImagen);
+    // Ocultar un mensaje en una imagen BMP
+    public static void ocultarMensaje() {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+            System.out.println("Nombre del archivo con la imagen a procesar: ");
+            String rutaImagen = br.readLine();
 
-    // Datos de la imagen
-    int anchoImagen = imagen.getAncho();
-    int altoImagen = imagen.getAlto();
-    int totalBytesImagen = anchoImagen * altoImagen * 3;
-    int longitudMensaje = imagen.leerLongitud();
-    int totalReferencias = (longitudMensaje * 17) + 16;
-    int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
-    int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
-    int totalPaginas = numPaginasImagen + numPaginasMensaje;
+            Imagen imagen = new Imagen(rutaImagen);
 
-    generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
-    generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
+            System.out.println("Nombre del archivo con el mensaje a esconder: ");
+            String rutaMensaje = br.readLine();
 
-    // Guardar las referencias en "referencias.txt"
-    escribirArchivoReferencias(tamanioPagina, altoImagen, anchoImagen, listaReferencias.size(), totalPaginas);
-}
+            int longitudMensaje = leerArchivoTexto(rutaMensaje, new char[8000]);
+            char[] mensaje = new char[longitudMensaje];
 
+            imagen.esconder(mensaje, longitudMensaje);
+            imagen.escribirImagen("salida_" + rutaImagen);
 
-private static void generarReferenciasLongitudMensaje(int tamanioPagina, int anchoImagen) {
-    int desplazamiento;
-    for (int i = 0; i < 16; i++) {
-        int paginaVirtual = i / tamanioPagina;
-        desplazamiento = i % tamanioPagina;
-
-        int fila = i / (anchoImagen * 3);
-        int columna = (i % (anchoImagen * 3)) / 3;
-        String canalColor = (i % 3 == 0) ? "R" : (i % 3 == 1) ? "G" : "B";
-
-        listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, fila, columna, canalColor));
+            System.out.println("El mensaje ha sido escondido en la imagen: salida_" + rutaImagen);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
-}
 
-private static void generarReferenciasAlternadas(int tamanioPagina, int anchoImagen, int longitudMensaje, int numPaginasImagen, int totalReferencias) {
-    int contadorRef = 16;
-    int bitIndex = 0;
-    int desplazamientoMensaje = 0;
+    // Extraer un mensaje oculto en una imagen BMP
+    public static void extraerMensaje() {
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+            System.out.println("Nombre del archivo con el mensaje escondido: ");
+            String rutaImagen = br.readLine();
 
-    while (contadorRef < totalReferencias) {
-        // Escribir en el mensaje (W)
-        int paginaVirtualMensaje = numPaginasImagen + (desplazamientoMensaje / tamanioPagina);
-        listaReferencias.add(new RecursoMemoria(paginaVirtualMensaje, desplazamientoMensaje));
-        contadorRef++;
+            Imagen imagen = new Imagen(rutaImagen);
+            int longitudMensaje = imagen.leerLongitud();
+            char[] mensaje = new char[longitudMensaje];
 
-        // Leer de la imagen (R)
-        int posicionByte = 16 + bitIndex;
-        int desplazamiento = posicionByte % tamanioPagina;
-        int paginaVirtual = posicionByte / tamanioPagina;
-        int fila = posicionByte / (anchoImagen * 3);
-        int columna = (posicionByte % (anchoImagen * 3)) / 3;
-        String canalColor = (posicionByte % 3 == 0) ? "R" : (posicionByte % 3 == 1) ? "G" : "B";
+            imagen.recuperar(mensaje, longitudMensaje);
 
-        listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, fila, columna, canalColor));
-        bitIndex++;
-        contadorRef++;
+            System.out.println("Nombre del archivo para almacenar el mensaje recuperado: ");
+            String archivoSalida = br.readLine();
 
-        if (bitIndex % 8 == 0 && contadorRef < totalReferencias) {
+            try (FileWriter fw = new FileWriter(archivoSalida)) {
+                fw.write(mensaje);
+            }
+
+            System.out.println("El mensaje ha sido guardado en: " + archivoSalida);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Generar referencias de paginación para la imagen y el mensaje
+    public static void generarReferencias(int tamanioPagina, String archivoImagen) {
+        Imagen imagen = new Imagen(archivoImagen);
+
+        int anchoImagen = imagen.getAncho();
+        int altoImagen = imagen.getAlto();
+        int totalBytesImagen = anchoImagen * altoImagen * 3;
+        int longitudMensaje = imagen.leerLongitud();
+        int totalReferencias = (longitudMensaje * 17) + 16;
+        int numPaginasImagen = (int) Math.ceil((double) totalBytesImagen / tamanioPagina);
+        int numPaginasMensaje = (int) Math.ceil((double) longitudMensaje / tamanioPagina);
+        int totalPaginas = numPaginasImagen + numPaginasMensaje;
+
+        generarReferenciasLongitudMensaje(tamanioPagina, anchoImagen);
+        generarReferenciasAlternadas(tamanioPagina, anchoImagen, longitudMensaje, numPaginasImagen, totalReferencias);
+
+        escribirArchivoReferencias(tamanioPagina, altoImagen, anchoImagen, listaReferencias.size(), totalPaginas);
+    }
+
+    private static void generarReferenciasLongitudMensaje(int tamanioPagina, int anchoImagen) {
+        for (int i = 0; i < 16; i++) {
+            int paginaVirtual = i / tamanioPagina;
+            int desplazamiento = i % tamanioPagina;
+
+            int fila = i / (anchoImagen * 3);
+            int columna = (i % (anchoImagen * 3)) / 3;
+            String canalColor = (i % 3 == 0) ? "R" : (i % 3 == 1) ? "G" : "B";
+
+            listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, fila, columna, canalColor));
+        }
+    }
+
+    private static void generarReferenciasAlternadas(int tamanioPagina, int anchoImagen, int longitudMensaje, int numPaginasImagen, int totalReferencias) {
+        int contadorRef = 16;
+        int bitIndex = 0;
+        int desplazamientoMensaje = 0;
+
+        while (contadorRef < totalReferencias) {
+            int paginaVirtualMensaje = numPaginasImagen + (desplazamientoMensaje / tamanioPagina);
             listaReferencias.add(new RecursoMemoria(paginaVirtualMensaje, desplazamientoMensaje));
-            desplazamientoMensaje++;
             contadorRef++;
+
+            int posicionByte = 16 + bitIndex;
+            int desplazamiento = posicionByte % tamanioPagina;
+            int paginaVirtual = posicionByte / tamanioPagina;
+            int fila = posicionByte / (anchoImagen * 3);
+            int columna = (posicionByte % (anchoImagen * 3)) / 3;
+            String canalColor = (posicionByte % 3 == 0) ? "R" : (posicionByte % 3 == 1) ? "G" : "B";
+
+            listaReferencias.add(new RecursoMemoria(paginaVirtual, desplazamiento, fila, columna, canalColor));
+            bitIndex++;
+            contadorRef++;
+
+            if (bitIndex % 8 == 0 && contadorRef < totalReferencias) {
+                listaReferencias.add(new RecursoMemoria(paginaVirtualMensaje, desplazamientoMensaje));
+                desplazamientoMensaje++;
+                contadorRef++;
+            }
         }
     }
-}
 
-// Método para escribir las referencias generadas en un archivo
-public static void escribirArchivoReferencias(int tamanioPagina, int alto, int ancho, int numReferencias, int totalPaginas) {
-    String archivoSalida = "referencias.txt"; // El archivo siempre será "referencias.txt"
-    try (FileWriter writer = new FileWriter(archivoSalida)) {
-        writer.write("TP=" + tamanioPagina + "\n");
-        writer.write("NF=" + alto + "\n");
-        writer.write("NC=" + ancho + "\n");
-        writer.write("NR=" + numReferencias + "\n");
-        writer.write("NP=" + totalPaginas + "\n");
-        for (RecursoMemoria ref : listaReferencias) {
-            writer.write(ref.toString() + "\n");
+    public static void escribirArchivoReferencias(int tamanioPagina, int alto, int ancho, int numReferencias, int totalPaginas) {
+        try (FileWriter writer = new FileWriter("referencias.txt")) {
+            writer.write("TP=" + tamanioPagina + "\n");
+            writer.write("NF=" + alto + "\n");
+            writer.write("NC=" + ancho + "\n");
+            writer.write("NR=" + numReferencias + "\n");
+            writer.write("NP=" + totalPaginas + "\n");
+            for (RecursoMemoria ref : listaReferencias) {
+                writer.write(ref.toString() + "\n");
+            }
+            System.out.println("Referencias guardadas en: referencias.txt");
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        System.out.println("Referencias guardadas en: " + archivoSalida);
-    } catch (IOException e) {
-        e.printStackTrace();
     }
-}
 
-public static void calcularDatos(int numMarcosPagina, String archivoReferencias) {
-    System.out.println("Calculando datos...");
-    System.out.println("Número de marcos de página: " + numMarcosPagina);
-    System.out.println("Archivo de referencias: " + archivoReferencias);
-    cargarReferencias(archivoReferencias);
-}
-
-public static void cargarReferencias(String archivoReferencias) {
-    ArrayList<Referencia> referencias = new ArrayList<>();
+    public static void calcularDatos(int numMarcosPagina, String archivoReferencias) {
+        System.out.println("Calculando datos...");
+        TablaPaginas.inicializarTabla(numMarcosPagina);
 
         try (BufferedReader br = new BufferedReader(new FileReader(archivoReferencias))) {
             String linea;
             while ((linea = br.readLine()) != null) {
-                // Saltar las líneas que no contienen referencias
                 if (linea.startsWith("Imagen") || linea.startsWith("Mensaje")) {
-                    // Dividir la línea en partes usando la coma como delimitador
                     String[] partes = linea.split(",");
-                    String nombre = partes[0];  // Matriz o vector y posicion correspondiente
-                    int pagina = Integer.parseInt(partes[1]);  // Pagina virtual correspondiente
-                    int desplazamiento = Integer.parseInt(partes[2]);  // Desplazamiento en la pagina virtual
-                    char tipo = partes[3].charAt(0);  // 'R' o 'W'
-
-                    // Crear una nueva referencia y añadirla al array
-                    Referencia ref = new Referencia(nombre, pagina, desplazamiento, tipo);
-                    referencias.add(ref);
+                    int pagina = Integer.parseInt(partes[1]);
+                    char tipo = partes[3].charAt(0);
+                    boolean isWrite = (tipo == 'W');
+                    TablaPaginas.accederPagina(pagina, isWrite);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-
-        System.out.println("\nReferencias cargadas: " + referencias.size()+"\n");
+        int fallasPagina = TablaPaginas.obtenerFallasPagina();
+        int hitsPagina = TablaPaginas.obtenerHitsPagina();
+        System.out.println("Fallas de página: " + fallasPagina);
+        System.out.println("Hits de página: " + hitsPagina);
+        System.out.println("Porcentaje de hits: " + ((double) hitsPagina / (hitsPagina + fallasPagina)) * 100 + "%");
     }
-        
-    public static void crearTablaPaginas(String archivoReferencias) {
-        TablaPaginas.crearTablaPaginas(archivoReferencias);
-    }
-
 
     // Método principal del simulador
     public static void main(String[] args) {
@@ -258,10 +211,8 @@ public static void cargarReferencias(String archivoReferencias) {
                         int numMarcosPagina = Integer.parseInt(br.readLine());
                         System.out.println("Ingrese el nombre del archivo de referencias: ");
                         String archivoReferencias = br.readLine();
-                        calcularDatos (numMarcosPagina, archivoReferencias);
-                        crearTablaPaginas(archivoReferencias);
+                        calcularDatos(numMarcosPagina, archivoReferencias);
                         break;
-  
                     case 5:
                         continuar = false;
                         break;
