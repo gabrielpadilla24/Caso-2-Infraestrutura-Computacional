@@ -199,6 +199,7 @@ public class Simulator {
                         System.out.println("Ingrese el nombre del archivo de imagen BMP: ");
                         String archivoImagen = br.readLine();
                         generarReferencias(tamanioPagina, "./archivos/" + archivoImagen);
+                        TablaPaginas.detenerResetearBitsThread(); 
                         break;
                     case 2:
                         ocultarMensaje();
@@ -211,7 +212,12 @@ public class Simulator {
                         int numMarcosPagina = Integer.parseInt(br.readLine());
                         System.out.println("Ingrese el nombre del archivo de referencias: ");
                         String archivoReferencias = br.readLine();
+                        TablaPaginas.inicializarTabla(numMarcosPagina); // Por ejemplo, 4 marcos de página
+                        TablaPaginas.iniciarResetearBitsThread(2); 
+                        TablaPaginas.iniciarActualizarEstadoThread();
                         calcularDatos(numMarcosPagina, archivoReferencias);
+                        TablaPaginas.detenerResetearBitsThread(); // Detiene el thread
+                        TablaPaginas.detenerActualizarEstadoThread();
                         break;
                     case 5:
                         continuar = false;
