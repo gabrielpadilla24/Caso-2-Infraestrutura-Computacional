@@ -26,24 +26,27 @@ public class Simulator {
 
     // Ocultar un mensaje en una imagen BMP
     public static void ocultarMensaje() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+        InputStreamReader isr = new InputStreamReader(System.in);
+        BufferedReader br = new BufferedReader(isr);
+        try  {
             System.out.println("Nombre del archivo con la imagen a procesar: ");
             String rutaImagen = br.readLine();
-
+    
             Imagen imagen = new Imagen(rutaImagen);
-
+    
             System.out.println("Nombre del archivo con el mensaje a esconder: ");
             String rutaMensaje = br.readLine();
+            
 
-            int longitudMensaje = leerArchivoTexto(rutaMensaje, new char[8000]);
+            int longitudMensaje = leerArchivoTexto(rutaMensaje, new char[12000]);
+
             char[] mensaje = new char[longitudMensaje];
 
             imagen.esconder(mensaje, longitudMensaje);
-            imagen.escribirImagen("salida_" + rutaImagen);
-
-            System.out.println("El mensaje ha sido escondido en la imagen: salida_" + rutaImagen);
-        } catch (Exception e) {
-            e.printStackTrace();
+    
+            System.out.println("Mensaje escondido con éxito.");
+        } catch (IOException errorLectura) {
+            errorLectura.printStackTrace();
         }
     }
 
