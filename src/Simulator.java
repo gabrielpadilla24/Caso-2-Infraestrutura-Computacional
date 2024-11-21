@@ -61,7 +61,9 @@ public class Simulator {
 
     // Extraer un mensaje oculto en una imagen BMP
     public static void extraerMensaje() {
-        try (BufferedReader br = new BufferedReader(new InputStreamReader(System.in))) {
+        InputStreamReader isr = new InputStreamReader(System.in);
+        BufferedReader br = new BufferedReader(isr);
+        try  {
             System.out.println("Nombre del archivo con el mensaje escondido: ");
             String rutaImagen = br.readLine();
 
